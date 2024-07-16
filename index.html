@@ -1,26 +1,279 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JPEG to PNG Converter</title>
-    <link rel="stylesheet" href="styles.css">
+<html><head><base href="https://convertjpeg2png.io"/>
+<title>ConvertJPEG2PNG.io - Free Online JPEG to PNG Converter</title>
+<style>
+  :root {
+    --primary-color: #4a90e2;
+    --secondary-color: #f39c12;
+    --background-color: #f5f7fa;
+    --text-color: #333;
+    --border-color: #ddd;
+  }
+
+  body {
+    font-family: 'Roboto', Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  h1, h2 {
+    color: var(--primary-color);
+    text-align: center;
+  }
+
+  .upload-container {
+    border: 2px dashed var(--primary-color);
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 30px;
+    background-color: white;
+    transition: all 0.3s ease;
+  }
+
+  .upload-container:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  #file-input {
+    display: none;
+  }
+
+  .upload-btn {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+
+  .upload-btn:hover {
+    background-color: #3a7bc8;
+  }
+
+  .preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+  }
+
+  .preview-item {
+    width: 200px;
+    background-color: white;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .preview-img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+
+  .preview-name {
+    font-size: 14px;
+    margin-bottom: 5px;
+    word-break: break-all;
+  }
+
+  .preview-size {
+    font-size: 12px;
+    color: #888;
+  }
+
+  #convert-btn, #download-all-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 12px 24px;
+    font-size: 16px;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+  }
+
+  #convert-btn:hover, #download-all-btn:hover {
+    background-color: #e67e22;
+  }
+
+  #batch-rename {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+  }
+
+  #batch-rename input {
+    padding: 5px;
+    margin-right: 10px;
+  }
+
+  footer {
+    margin-top: 50px;
+    text-align: center;
+    color: #888;
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>JPEG to PNG Converter</h1>
-        <div class="upload-area">
-            <input type="file" id="file-input" multiple accept=".jpg,.jpeg" hidden>
-            <label for="file-input" class="upload-button">Select Images (Max 10)</label>
-        </div>
-        <div id="preview-area"></div>
-        <div id="rename-area" hidden>
-            <h2>Rename Files</h2>
-            <input type="text" id="rename-prefix" placeholder="Enter prefix for batch rename">
-            <button id="rename-button">Rename</button>
-        </div>
-        <button id="convert-button" disabled>Convert to PNG</button>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html>
+  <h1>ConvertJPEG2PNG.io</h1>
+  <div class="upload-container">
+    <input type="file" id="file-input" accept="image/jpeg" multiple />
+    <button class="upload-btn" onclick="document.getElementById('file-input').click()">Upload JPEG Images (Max 10)</button>
+    <p>Drag and drop your JPEG images here or click to select</p>
+  </div>
+  <div id="batch-rename">
+    <input type="text" id="rename-prefix" placeholder="Enter prefix for batch renaming">
+    <button onclick="batchRename()">Apply Batch Rename</button>
+  </div>
+  <div class="preview-container" id="preview-container"></div>
+  <button id="convert-btn" style="display:none;">Convert to PNG</button>
+  <button id="download-all-btn" style="display:none;">Download All</button>
+
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const previewContainer = document.getElementById('preview-container');
+    const convertBtn = document.getElementById('convert-btn');
+    const downloadAllBtn = document.getElementById('download-all-btn');
+    let uploadedFiles = [];
+
+    fileInput.addEventListener('change', handleFileUpload);
+    convertBtn.addEventListener('click', convertToPNG);
+    downloadAllBtn.addEventListener('click', downloadAll);
+
+    function handleFileUpload(event) {
+      const files = Array.from(event.target.files).slice(0, 10);
+      uploadedFiles = files;
+      previewContainer.innerHTML = '';
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const previewItem = createPreviewItem(file, e.target.result, index);
+          previewContainer.appendChild(previewItem);
+        }
+        reader.readAsDataURL(file);
+      });
+      convertBtn.style.display = 'inline-block';
+    }
+
+    function createPreviewItem(file, src, index) {
+      const item = document.createElement('div');
+      item.className = 'preview-item';
+      item.innerHTML = `
+        <img class="preview-img" src="${src}" alt="${file.name}">
+        <p class="preview-name">${file.name}</p>
+        <p class="preview-size">${formatFileSize(file.size)}</p>
+      `;
+      return item;
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' bytes';
+      else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      else return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function convertToPNG() {
+      uploadedFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const pngDataUrl = canvas.toDataURL('image/png');
+            updatePreviewItem(index, pngDataUrl);
+          }
+          img.src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+      });
+      downloadAllBtn.style.display = 'inline-block';
+    }
+
+    function updatePreviewItem(index, newSrc) {
+      const previewItems = document.querySelectorAll('.preview-item');
+      const item = previewItems[index];
+      const img = item.querySelector('.preview-img');
+      img.src = newSrc;
+      const nameElement = item.querySelector('.preview-name');
+      const newName = nameElement.textContent.replace('.jpg', '.png').replace('.jpeg', '.png');
+      nameElement.textContent = newName;
+    }
+
+    function downloadAll() {
+      const previewItems = document.querySelectorAll('.preview-item');
+      previewItems.forEach(item => {
+        const img = item.querySelector('.preview-img');
+        const name = item.querySelector('.preview-name').textContent;
+        const link = document.createElement('a');
+        link.href = img.src;
+        link.download = name;
+        link.click();
+      });
+    }
+
+    function batchRename() {
+      const prefix = document.getElementById('rename-prefix').value;
+      if (!prefix) return;
+      const previewItems = document.querySelectorAll('.preview-item');
+      previewItems.forEach((item, index) => {
+        const nameElement = item.querySelector('.preview-name');
+        const extension = nameElement.textContent.split('.').pop();
+        const newName = `${prefix}_${index + 1}.${extension}`;
+        nameElement.textContent = newName;
+      });
+    }
+  </script>
+
+  <h2>About ConvertJPEG2PNG.io</h2>
+  <p>ConvertJPEG2PNG.io is a free online tool that allows you to quickly and easily convert your JPEG images to PNG format. Our tool is designed to be simple, fast, and efficient, perfect for both casual users and professionals who need to convert images regularly.</p>
+  
+  <h2>How to Use</h2>
+  <ol>
+    <li>Click the "Upload JPEG Images" button or drag and drop up to 10 JPEG images into the upload area.</li>
+    <li>Once uploaded, you'll see previews of your images.</li>
+    <li>If you want to rename your files in bulk, enter a prefix in the "Batch Rename" field and click "Apply Batch Rename".</li>
+    <li>Click the "Convert to PNG" button to process your images.</li>
+    <li>After conversion, click "Download All" to save all your converted PNG files.</li>
+  </ol>
+
+  <h2>Why Choose ConvertJPEG2PNG.io?</h2>
+  <ul>
+    <li>Fast and free: Convert up to 10 images at once without any cost.</li>
+    <li>No registration required: Start converting immediately without signing up.</li>
+    <li>Privacy focused: Your images are processed entirely in your browser and are never uploaded to our servers.</li>
+    <li>Batch processing: Convert multiple images at once to save time.</li>
+    <li>Batch renaming: Easily rename multiple files with a custom prefix.</li>
+    <li>High quality: Our conversion process maintains the quality of your original image.</li>
+    <li>Preview functionality: See your images before and after conversion.</li>
+  </ul>
+
+  <h2>JPEG vs PNG</h2>
+  <p>JPEG (Joint Photographic Experts Group) and PNG (Portable Network Graphics) are both popular image formats, but they have different strengths:</p>
+  <ul>
+    <li>JPEG is best for photographs and complex images with many colors. It uses lossy compression, which can reduce file size significantly but may also reduce image quality.</li>
+    <li>PNG is ideal for images with sharp edges, text, or transparency. It uses lossless compression, meaning it maintains image quality but may result in larger file sizes.</li>
+  </ul>
+  <p>Converting from JPEG to PNG won't improve image quality, but it can be useful if you need transparency or want to avoid further quality loss from editing and re-saving a JPEG image.</p>
+
+  <footer>
+    <p>© 2023 ConvertJPEG2PNG.io | <a href="https://convertjpeg2png.io/privacy">Privacy Policy</a> | <a href="https://convertjpeg2png.io/terms">Terms of Service</a></p>
+    <p>For any questions or support, please contact us at <a href="/cdn-cgi/l/email-protection#097a7c7979667b7d496a66677f6c7b7d63796c6e3b79676e276066"><span class="__cf_email__" data-cfemail="98ebede8e8f7eaecd8fbf7f6eefdeaecf2e8fdffaae8f6ffb6f1f7">[email&#160;protected]</span></a></p>
+  </footer>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body></html>
