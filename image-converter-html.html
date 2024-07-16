@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JPEG to PNG Converter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>JPEG to PNG Converter</h1>
+        <div class="upload-area">
+            <input type="file" id="file-input" multiple accept=".jpg,.jpeg" hidden>
+            <label for="file-input" class="upload-button">Select Images (Max 10)</label>
+        </div>
+        <div id="preview-area"></div>
+        <div id="rename-area" hidden>
+            <h2>Rename Files</h2>
+            <input type="text" id="rename-prefix" placeholder="Enter prefix for batch rename">
+            <button id="rename-button">Rename</button>
+        </div>
+        <button id="convert-button" disabled>Convert to PNG</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
